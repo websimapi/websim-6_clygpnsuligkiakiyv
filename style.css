@@ -1,0 +1,542 @@
+:root {
+    --bg-color: #0f0f11;
+    --surface-color: #1e1e24;
+    --accent-color: #7c3aed;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --input-bg: #27272a;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Image Display Area */
+.image-display {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: radial-gradient(circle at center, #1a1a20 0%, #0f0f11 100%);
+    padding: 20px;
+    gap: 20px;
+    /* Removed scroll-behavior: smooth to control it via JS for better initial load handling */
+    overflow-anchor: auto; /* Helps with scroll jumping */
+}
+
+@media (max-width: 600px) {
+    .image-display {
+        padding: 12px;
+        gap: 16px;
+    }
+    
+    .message-card {
+        padding: 12px;
+    }
+}
+
+.image-display img {
+    /* Reset previous specific styles if any interfere, though we will use classes now */
+    display: block; 
+}
+
+/* Feed Items */
+.message-card {
+    background: var(--surface-color);
+    border-radius: 16px;
+    padding: 16px;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 100%;
+    /* Performance optimizations */
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 300px; /* Estimate height to prevent scrollbar jumping too much */
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.prompt-bubble {
+    background: rgba(255,255,255,0.03);
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #eee;
+    border-left: 3px solid var(--accent-color);
+}
+
+.generated-image {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    display: block;
+    background: #000;
+    min-height: 100px;
+    aspect-ratio: 1 / 1; /* Reserve space to prevent layout jumps */
+    object-fit: cover;
+}
+
+.message-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.execution-tag {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.05);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.share-btn {
+    width: auto;
+    height: 32px;
+    padding: 0 16px;
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--accent-color);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 16px;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.share-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.share-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    gap: 16px;
+    opacity: 0.5;
+}
+
+.empty-state .icon {
+    font-size: 48px;
+}
+
+/* Hide old elements that might be targeted by old CSS but are removed or repurposed */
+#generatedImage, #executionTime {
+    display: none !important;
+}
+
+/* Loading State */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgba(15, 15, 17, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(124, 58, 237, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Like Popup */
+.like-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.like-popup-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.like-popup {
+    background: var(--surface-color);
+    padding: 32px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 300px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.like-popup-overlay.visible .like-popup {
+    transform: scale(1);
+}
+
+.like-icon {
+    font-size: 48px;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    10% { transform: scale(1.1); }
+    20% { transform: scale(1); }
+    30% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.like-popup p {
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.like-popup button {
+    width: auto;
+    padding: 0 32px;
+    font-weight: 600;
+    border-radius: 20px;
+    margin-top: 8px;
+}
+
+/* Share Sheet (iOS Style) */
+.share-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    backdrop-filter: blur(2px);
+}
+
+.share-sheet-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.share-sheet {
+    background: #1c1c1e;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+.share-sheet-overlay.visible .share-sheet {
+    transform: translateY(0);
+}
+
+.share-preview {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    align-items: center;
+}
+
+.share-preview-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #000;
+}
+
+.share-preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.share-preview-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.share-preview-subtitle {
+    font-size: 14px;
+    color: #8e8e93;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.share-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 options requested */
+    gap: 16px;
+}
+
+.share-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+}
+
+.share-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #2c2c2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.share-action-btn:active .share-icon-circle {
+    background: #3a3a3c;
+    transform: scale(0.95);
+}
+
+.share-label {
+    font-size: 13px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.share-cancel {
+    margin-top: 8px;
+    width: 100%;
+    background: #2c2c2e;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    padding: 16px;
+    border-radius: 14px;
+    height: auto;
+}
+
+.share-cancel:active {
+    background: #3a3a3c;
+}
+
+/* Controls Area */
+.controls-area {
+    padding: 16px;
+    background: var(--surface-color);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.input-group {
+    display: flex;
+    gap: 12px;
+    background: var(--input-bg);
+    border-radius: 24px;
+    padding: 6px;
+    align-items: flex-end;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.input-group:focus-within {
+    border-color: var(--accent-color);
+}
+
+textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 12px 16px;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+    max-height: 100px;
+    min-height: 44px;
+    line-height: 20px;
+}
+
+button {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    flex-shrink: 0;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button:disabled {
+    background: var(--text-secondary);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #ef4444;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast.visible {
+    transform: translateX(-50%) translateY(0);
+}
